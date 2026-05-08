@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}Study History — StudyIQ{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- PAGE HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold text-white mb-0">
+                <i class="bi bi-clock-history text-primary me-2"></i>Study History
+            </h4>
+            <small class="text-secondary">All your logged study sessions</small>
+        </div>
+        <a href="{{ url_for('log_study') }}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-circle me-2"></i>Log New Session
+        </a>
+    </div>
+
+    <!-- SESSION TABLE -->
+    {% if logs.items %}
+    <div class="chart-card p-4 rounded-4 mb-4">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-borderless mb-0">
+                <thead>
+                    <tr class="text-secondary small border-bottom border-secondary">
+                        <th>#</th>
+                        <th>Date</th>
+                        <th>Topic</th>
+                        <th>Subject</th>
+                        <th>Attempted</th>
+                        <th>Correct</th>
+                        <th>Accuracy</th>
+                        <th>Time</th>
+                        <th>Difficulty</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs.items %}
+                    <tr>
+                        <td class="text-secondary">
+                            <small>{{ loop.index + (logs.page - 1) * 10 }}</small>
+                        </td>
+                        <td class="text-white">
+                            {{ log.session_date.strftime('%d %b %Y') }}
+                        </td>
+                        <td class="text-white fw-bold">
+                            {{ log.topic.name }}
+                        </td>
+                        <td>
+                            <span class="badge bg-dark border border-secondary text-light">
+                                {{ log.topic.subject.name }}
+                            </span>
+                        </td>
+                        <td class="text-secondary">{{ log.questions_attempted }}</td>
+                        <td class="text-secondary">{{ log.correct_answers }}</td>
+                        <td>
+                            <span class="badge
+                                {% if log.accuracy() >= 70 %}bg-success
+                                {% elif log.accuracy() >= 40 %}bg-warning text-dark
+                                {% else %}bg-danger{% endif %}">
+                                {{ log.accuracy() }}%
+                            </span>
+                        </td>
+                        <td class="text-secondary">
+                            <small>{{ log.study_time_minutes }}m</small>
+                        </td>
+                        <td>
+                            <small class="text-secondary">{{ log.difficulty }}</small>
+                        </td>
+                        <td>
+                            <form method="POST"
+                                  action="{{ url_for('delete_log', log_id=log.id) }}"
+                                  onsubmit="return confirm('Delete this session?')">
+                                <button type="submit"
+                                        class="btn btn-outline-danger btn-sm py-0 px-2">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PAGINATION -->
+    {% if logs.pages > 1 %}
+    <nav>
+        <ul class="pagination justify-content-center">
+
+            <!-- Previous -->
+            <li class="page-item {% if not logs.has_prev %}disabled{% endif %}">
+                <a class="page-link bg-dark border-secondary text-light"
+                   href="{{ url_for('history', page=logs.prev_num) if logs.has_prev else '#' }}">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
+
+            <!-- Page Numbers -->
+            {% for page_num in logs.iter_pages(left_edge=1, right_edge=1,
+                                               left_current=2, right_current=2) %}
+                {% if page_num %}
+                    <li class="page-item {% if page_num == logs.page %}active{% endif %}">
+                        <a class="page-link bg-dark border-secondary
+                                  {% if page_num == logs.page %}text-white
+                                  {% else %}text-secondary{% endif %}"
+                           href="{{ url_for('history', page=page_num) }}">
+                            {{ page_num }}
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link bg-dark border-secondary text-secondary">
+                            …
+                        </span>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            <!-- Next -->
+            <li class="page-item {% if not logs.has_next %}disabled{% endif %}">
+                <a class="page-link bg-dark border-secondary text-light"
+                   href="{{ url_for('history', page=logs.next_num) if logs.has_next else '#' }}">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+
+        </ul>
+    </nav>
+
+    <!-- Pagination Summary -->
+    <p class="text-center text-secondary small">
+        Showing {{ (logs.page - 1) * 10 + 1 }}–{{ [logs.page * 10, logs.total] | min }}
+        of {{ logs.total }} sessions
+    </p>
+    {% endif %}
+
+    {% else %}
+    <!-- EMPTY STATE -->
+    <div class="text-center py-5">
+        <i class="bi bi-journal-x display-1 text-secondary"></i>
+        <h5 class="text-white mt-3">No sessions logged yet</h5>
+        <p class="text-secondary">
+            Start logging your study sessions to see them here.
+        </p>
+        <a href="{{ url_for('log_study') }}" class="btn btn-primary mt-2">
+            <i class="bi bi-plus-circle me-2"></i>Log First Session
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

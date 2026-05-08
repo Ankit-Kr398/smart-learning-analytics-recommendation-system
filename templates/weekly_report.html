@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Weekly Report — StudyIQ{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold text-white mb-0">Weekly Report</h4>
+            <small class="text-secondary">
+                {{ report.week_start }} to {{ report.week_end }}
+            </small>
+        </div>
+        <a href="{{ url_for('monthly_report') }}"
+           class="btn btn-outline-secondary btn-sm">
+            View Monthly →
+        </a>
+    </div>
+
+    <!-- WEEKLY STAT CARDS -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="stat-card p-3 rounded-4 text-center">
+                <div class="fs-2 fw-bold text-primary">
+                    {{ report.total_sessions }}
+                </div>
+                <small class="text-secondary">Total Sessions</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card p-3 rounded-4 text-center">
+                <div class="fs-2 fw-bold text-success">
+                    {{ (report.total_time_minutes / 60) | round(1) }}h
+                </div>
+                <small class="text-secondary">Study Time</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card p-3 rounded-4 text-center">
+                <div class="fs-2 fw-bold text-warning">
+                    {{ report.overall_accuracy }}%
+                </div>
+                <small class="text-secondary">Avg Accuracy</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card p-3 rounded-4 text-center">
+                <div class="fs-2 fw-bold text-info">
+                    {{ report.daily_breakdown | selectattr('sessions', 'gt', 0)
+                       | list | length }}
+                </div>
+                <small class="text-secondary">Active Days</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- DAILY BREAKDOWN CHART -->
+    <div class="chart-card p-4 rounded-4 mb-4">
+        <h6 class="text-white fw-bold mb-3">Daily Study Time (minutes)</h6>
+        <canvas id="weeklyChart" height="120"></canvas>
+    </div>
+
+    <!-- DAILY TABLE -->
+    <div class="chart-card p-4 rounded-4">
+        <h6 class="text-white fw-bold mb-3">Day-by-Day Breakdown</h6>
+        <div class="table-responsive">
+            <table class="table table-dark table-borderless">
+                <thead>
+                    <tr class="text-secondary small border-bottom border-secondary">
+                        <th>Day</th>
+                        <th>Sessions</th>
+                        <th>Time</th>
+                        <th>Accuracy</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for day in report.daily_breakdown %}
+                    <tr class="{% if day.sessions == 0 %}text-secondary{% else %}text-white{% endif %}">
+                        <td>{{ day.day }}</td>
+                        <td>{{ day.sessions if day.sessions > 0 else '—' }}</td>
+                        <td>{{ day.time_minutes ~ 'm' if day.sessions > 0 else '—' }}</td>
+                        <td>
+                            {% if day.sessions > 0 %}
+                            <span class="badge
+                                {% if day.accuracy >= 70 %}bg-success
+                                {% elif day.accuracy >= 40 %}bg-warning text-dark
+                                {% else %}bg-danger{% endif %}">
+                                {{ day.accuracy }}%
+                            </span>
+                            {% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+const weeklyLabels = {{ report.daily_breakdown | map(attribute='day') | list | tojson }};
+const weeklyTimes  = {{ report.daily_breakdown | map(attribute='time_minutes') | list | tojson }};
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script>
+new Chart(document.getElementById('weeklyChart'), {
+    type: 'bar',
+    data: {
+        labels: weeklyLabels,
+        datasets: [{
+            label: 'Minutes Studied',
+            data: weeklyTimes,
+            backgroundColor: 'rgba(99, 102, 241, 0.7)',
+            borderColor: 'rgba(99, 102, 241, 1)',
+            borderWidth: 2,
+            borderRadius: 6
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' } },
+            y: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' } }
+        }
+    }
+});
+</script>
+{% endblock %}

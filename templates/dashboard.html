@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — StudyIQ{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- PAGE HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold text-white mb-0">
+                Welcome back, {{ user.username }}
+                <i class="bi bi-hand-wave text-warning"></i>
+            </h4>
+            <small class="text-secondary">Here is your learning snapshot</small>
+        </div>
+        <a href="{{ url_for('log_study') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>Log Session
+        </a>
+    </div>
+
+    {% if not analytics.has_data %}
+    <!-- EMPTY STATE -->
+    <div class="text-center py-5">
+        <i class="bi bi-journal-x display-1 text-secondary"></i>
+        <h4 class="text-white mt-3">No study sessions yet</h4>
+        <p class="text-secondary">
+            Log your first session to unlock your analytics dashboard.
+        </p>
+        <a href="{{ url_for('log_study') }}" class="btn btn-primary btn-lg mt-2">
+            <i class="bi bi-plus-circle me-2"></i>Log First Session
+        </a>
+    </div>
+
+    {% else %}
+
+    <!-- STAT CARDS ROW -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="stat-card p-3 rounded-4 text-center h-100">
+                <div class="stat-icon mb-2">
+                    <i class="bi bi-trophy-fill text-warning fs-4"></i>
+                </div>
+                <div class="display-6 fw-bold text-white">
+                    {{ analytics.placement_score }}%
+                </div>
+                <small class="text-secondary">Placement Readiness</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card p-3 rounded-4 text-center h-100">
+                <div class="stat-icon mb-2">
+                    <i class="bi bi-bullseye text-success fs-4"></i>
+                </div>
+                <div class="display-6 fw-bold text-white">
+                    {{ analytics.overall_accuracy }}%
+                </div>
+                <small class="text-secondary">Overall Accuracy</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card p-3 rounded-4 text-center h-100">
+                <div class="stat-icon mb-2">
+                    <i class="bi bi-fire text-danger fs-4"></i>
+                </div>
+                <div class="display-6 fw-bold text-white">
+                    {{ analytics.streak }}
+                </div>
+                <small class="text-secondary">Day Streak</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card p-3 rounded-4 text-center h-100">
+                <div class="stat-icon mb-2">
+                    <i class="bi bi-clock-fill text-info fs-4"></i>
+                </div>
+                <div class="display-6 fw-bold text-white">
+                    {{ (analytics.total_time_minutes / 60) | round(1) }}h
+                </div>
+                <small class="text-secondary">Total Study Time</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHARTS ROW -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-7">
+            <div class="chart-card p-4 rounded-4">
+                <h6 class="text-white fw-bold mb-3">
+                    <i class="bi bi-bar-chart-fill text-primary me-2"></i>
+                    Subject Performance
+                </h6>
+                <canvas id="subjectChart" height="200"></canvas>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="chart-card p-4 rounded-4">
+                <h6 class="text-white fw-bold mb-3">
+                    <i class="bi bi-pie-chart-fill text-success me-2"></i>
+                    Score Breakdown
+                </h6>
+                <canvas id="scoreDonut" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- WEAK TOPICS + RECOMMENDATIONS ROW -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="chart-card p-4 rounded-4 h-100">
+                <h6 class="text-white fw-bold mb-3">
+                    <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                    Weak Topics
+                </h6>
+                {% if analytics.weak_topics %}
+                    <div class="table-responsive">
+                        <table class="table table-dark table-borderless table-sm mb-0">
+                            <thead>
+                                <tr class="text-secondary small">
+                                    <th>Topic</th>
+                                    <th>Subject</th>
+                                    <th>Health</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for topic in analytics.weak_topics %}
+                                <tr>
+                                    <td class="text-white">{{ topic.topic_name }}</td>
+                                    <td class="text-secondary">
+                                        <small>{{ topic.subject_name }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge
+                                            {% if topic.topic_health_score < 40 %}
+                                                bg-danger
+                                            {% elif topic.topic_health_score < 60 %}
+                                                bg-warning text-dark
+                                            {% else %}
+                                                bg-success
+                                            {% endif %}">
+                                            {{ topic.topic_health_score }}%
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-secondary text-center py-3">
+                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                        No weak topics detected. Keep it up!
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="chart-card p-4 rounded-4 h-100">
+                <h6 class="text-white fw-bold mb-3">
+                    <i class="bi bi-lightbulb-fill text-warning me-2"></i>
+                    Recommendations
+                </h6>
+                {% for rec in recommendations[:3] %}
+                <div class="rec-card mb-3 p-3 rounded-3
+                    {% if rec.priority == 'critical' %}rec-critical
+                    {% elif rec.priority == 'high' %}rec-high
+                    {% elif rec.priority == 'medium' %}rec-medium
+                    {% else %}rec-low{% endif %}">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <small class="fw-bold text-white">{{ rec.title }}</small>
+                        <span class="badge ms-2
+                            {% if rec.priority == 'critical' %}bg-danger
+                            {% elif rec.priority == 'high' %}bg-warning text-dark
+                            {% elif rec.priority == 'medium' %}bg-info text-dark
+                            {% else %}bg-secondary{% endif %}">
+                            {{ rec.priority }}
+                        </span>
+                    </div>
+                    <small class="text-secondary d-block">{{ rec.action }}</small>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- SUBJECT PROGRESS BARS -->
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="chart-card p-4 rounded-4">
+                <h6 class="text-white fw-bold mb-3">
+                    <i class="bi bi-list-check text-info me-2"></i>
+                    Subject Health Scores
+                </h6>
+                <div class="row g-3">
+                    {% for subject in analytics.subject_stats %}
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="text-white fw-bold">
+                                {{ subject.subject_name }}
+                            </small>
+                            <small class="text-secondary">
+                                {{ subject.subject_health_score }}%
+                            </small>
+                        </div>
+                        <div class="progress" style="height: 10px; background:#2a2a3a;">
+                            <div class="progress-bar
+                                {% if subject.subject_health_score >= 70 %}bg-success
+                                {% elif subject.subject_health_score >= 40 %}bg-warning
+                                {% else %}bg-danger{% endif %}"
+                                role="progressbar"
+                                style="width: {{ subject.subject_health_score }}%">
+                            </div>
+                        </div>
+                        <small class="text-secondary">
+                            {{ subject.total_sessions }} sessions ·
+                            {{ subject.overall_accuracy }}% accuracy
+                        </small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RECENT SESSIONS -->
+    <div class="chart-card p-4 rounded-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="text-white fw-bold mb-0">
+                <i class="bi bi-clock-history text-secondary me-2"></i>
+                Recent Sessions
+            </h6>
+            <a href="{{ url_for('history') }}"
+               class="btn btn-outline-secondary btn-sm">View All</a>
+        </div>
+        {% if recent_logs %}
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-borderless mb-0">
+                <thead>
+                    <tr class="text-secondary small border-bottom border-secondary">
+                        <th>Date</th>
+                        <th>Topic</th>
+                        <th>Subject</th>
+                        <th>Accuracy</th>
+                        <th>Time</th>
+                        <th>Difficulty</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in recent_logs %}
+                    <tr>
+                        <td class="text-secondary">
+                            <small>{{ log.session_date.strftime('%d %b') }}</small>
+                        </td>
+                        <td class="text-white">{{ log.topic.name }}</td>
+                        <td class="text-secondary">
+                            <small>{{ log.topic.subject.name }}</small>
+                        </td>
+                        <td>
+                            <span class="badge
+                                {% if log.accuracy() >= 70 %}bg-success
+                                {% elif log.accuracy() >= 40 %}bg-warning text-dark
+                                {% else %}bg-danger{% endif %}">
+                                {{ log.accuracy() }}%
+                            </span>
+                        </td>
+                        <td class="text-secondary">
+                            <small>{{ log.study_time_minutes }}m</small>
+                        </td>
+                        <td>
+                            <small class="text-secondary">{{ log.difficulty }}</small>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <p class="text-secondary text-center py-3">No sessions logged yet.</p>
+        {% endif %}
+    </div>
+
+    {% endif %}
+</div>
+
+<!-- PASS DATA TO CHART.JS -->
+{% if analytics.has_data %}
+<script>
+    const subjectLabels = {{ analytics.subject_stats | map(attribute='subject_name') | list | tojson }};
+    const subjectScores = {{ analytics.subject_stats | map(attribute='subject_health_score') | list | tojson }};
+    const placementScore = {{ analytics.placement_score }};
+    const consistencyScore = {{ analytics.consistency_score }};
+    const overallScore = {{ analytics.overall_score }};
+</script>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% endblock %}

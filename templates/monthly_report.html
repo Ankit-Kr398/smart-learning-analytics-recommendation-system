@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Monthly Report — StudyIQ{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold text-white mb-0">Monthly Report</h4>
+            <small class="text-secondary">{{ report.month }}</small>
+        </div>
+        <a href="{{ url_for('weekly_report') }}"
+           class="btn btn-outline-secondary btn-sm">
+            ← View Weekly
+        </a>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="stat-card p-3 rounded-4 text-center">
+                <div class="fs-2 fw-bold text-primary">
+                    {{ report.total_sessions }}
+                </div>
+                <small class="text-secondary">Total Sessions</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card p-3 rounded-4 text-center">
+                <div class="fs-2 fw-bold text-success">
+                    {{ (report.total_time_minutes / 60) | round(1) }}h
+                </div>
+                <small class="text-secondary">Study Time</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card p-3 rounded-4 text-center">
+                <div class="fs-2 fw-bold text-warning">
+                    {{ report.overall_accuracy }}%
+                </div>
+                <small class="text-secondary">Avg Accuracy</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card p-3 rounded-4 text-center">
+                <div class="fs-2 fw-bold text-info">
+                    {{ report.weekly_breakdown | length }}
+                </div>
+                <small class="text-secondary">Active Weeks</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- WEEKLY BREAKDOWN TABLE -->
+    <div class="chart-card p-4 rounded-4 mb-4">
+        <h6 class="text-white fw-bold mb-3">Week-by-Week Breakdown</h6>
+        {% if report.weekly_breakdown %}
+        <div class="table-responsive">
+            <table class="table table-dark table-borderless">
+                <thead>
+                    <tr class="text-secondary small border-bottom border-secondary">
+                        <th>Week</th>
+                        <th>Sessions</th>
+                        <th>Time</th>
+                        <th>Accuracy</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for week in report.weekly_breakdown %}
+                    <tr class="text-white">
+                        <td>{{ week.week }}</td>
+                        <td class="text-secondary">{{ week.sessions }}</td>
+                        <td class="text-secondary">{{ week.time_minutes }}m</td>
+                        <td>
+                            <span class="badge
+                                {% if week.accuracy >= 70 %}bg-success
+                                {% elif week.accuracy >= 40 %}bg-warning text-dark
+                                {% else %}bg-danger{% endif %}">
+                                {{ week.accuracy }}%
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-secondary text-center py-3">
+            No sessions logged this month yet.
+        </p>
+        {% endif %}
+    </div>
+
+    <!-- ALL SESSIONS THIS MONTH -->
+    {% if report.logs %}
+    <div class="chart-card p-4 rounded-4">
+        <h6 class="text-white fw-bold mb-3">All Sessions This Month</h6>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-borderless mb-0">
+                <thead>
+                    <tr class="text-secondary small border-bottom border-secondary">
+                        <th>Date</th>
+                        <th>Topic</th>
+                        <th>Subject</th>
+                        <th>Accuracy</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in report.logs %}
+                    <tr>
+                        <td class="text-secondary">
+                            {{ log.session_date.strftime('%d %b') }}
+                        </td>
+                        <td class="text-white">{{ log.topic.name }}</td>
+                        <td class="text-secondary">
+                            <small>{{ log.topic.subject.name }}</small>
+                        </td>
+                        <td>
+                            <span class="badge
+                                {% if log.accuracy() >= 70 %}bg-success
+                                {% elif log.accuracy() >= 40 %}bg-warning text-dark
+                                {% else %}bg-danger{% endif %}">
+                                {{ log.accuracy() }}%
+                            </span>
+                        </td>
+                        <td class="text-secondary">
+                            <small>{{ log.study_time_minutes }}m</small>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
