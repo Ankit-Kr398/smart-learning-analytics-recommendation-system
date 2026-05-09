@@ -1,0 +1,98 @@
+/* ── BASE ───────────────────────────────────── */
+body {
+    background-color: #0f0f1a;
+    color: #e5e7eb;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+/* ── HERO ───────────────────────────────────── */
+.hero-section {
+    background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+    min-height: 85vh;
+    display: flex;
+    align-items: center;
+}
+
+.bg-dark-card { background-color: #1a1a2e; }
+
+.stat-mini {
+    background-color: #0f0f1a;
+    border: 1px solid #2a2a3a;
+    transition: transform 0.2s;
+}
+
+.stat-mini:hover { transform: translateY(-3px); }
+
+/* ── FEATURE CARDS ──────────────────────────── */
+.feature-card {
+    background-color: #1a1a2e;
+    border: 1px solid #2a2a3a;
+    transition: border-color 0.2s, transform 0.2s;
+}
+
+.feature-card:hover {
+    border-color: #6366f1;
+    transform: translateY(-4px);
+}
+
+.bg-dark-section { background-color: #12121f; }
+
+/* ── AUTH CARDS ─────────────────────────────── */
+.auth-card {
+    background-color: #1a1a2e;
+    border: 1px solid #2a2a3a;
+}
+
+.bg-dark-input {
+    background-color: #0f0f1a !important;
+    color: #e5e7eb !important;
+}
+
+.bg-dark-input:focus {
+    background-color: #0f0f1a !important;
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 0.2rem rgba(99,102,241,0.25) !important;
+    color: #e5e7eb !important;
+}
+
+.bg-dark-input::placeholder { color: #6b7280 !important; }
+
+/* ── DASHBOARD CARDS ────────────────────────── */
+.stat-card {
+    background-color: #1a1a2e;
+    border: 1px solid #2a2a3a;
+    transition: border-color 0.2s, transform 0.2s;
+}
+
+.stat-card:hover {
+    border-color: #6366f1;
+    transform: translateY(-2px);
+}
+
+.chart-card {
+    background-color: #1a1a2e;
+    border: 1px solid #2a2a3a;
+}
+
+/* ── RECOMMENDATION CARDS ───────────────────── */
+.rec-card { border-left: 3px solid; }
+.rec-critical { border-color: #ef4444; background-color: rgba(239,68,68,0.08); }
+.rec-high     { border-color: #f59e0b; background-color: rgba(245,158,11,0.08); }
+.rec-medium   { border-color: #06b6d4; background-color: rgba(6,182,212,0.08); }
+.rec-low      { border-color: #6b7280; background-color: rgba(107,114,128,0.08); }
+
+/* ── NAVBAR ─────────────────────────────────── */
+.navbar { border-bottom: 1px solid #2a2a3a; }
+
+/* ── TABLES ─────────────────────────────────── */
+.table-dark { background-color: transparent; }
+.table-dark td, .table-dark th { border-color: #2a2a3a !important; }
+.table-hover tbody tr:hover { background-color: #2a2a3a !important; }
+
+/* ── BADGES ─────────────────────────────────── */
+.badge { font-weight: 500; }
+
+/* ── SCROLLBAR ──────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0f0f1a; }
+::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 3px; }
